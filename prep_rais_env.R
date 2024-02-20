@@ -1,4 +1,5 @@
 #------------------------------------------------------------------------------------------------
+#DESCONTINUADO
 #This code will work on RAIS data and unify with other dataframes
 #- But first it will bind all the year scr dfs we've done before
 #------------------------------------------------------------------------------------------------

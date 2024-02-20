@@ -28,40 +28,9 @@ data_path = "Z:/Bernardus/Cunha_Santos_Doornik/Dta_files"
 rais_path = "Z:/DATA/Dta_files/RAIS"
 output_path = "Z:/Bernardus/Cunha_Santos_Doornik/Output_check"
 
-
-############################################################
-#Additional modifications in the database
-############################################################
-
 setwd(data_path)
-df_1<-read_parquet("fin_fric_dataset.parquet")
-
-#Create a "balanced panel". Will be important for lags and leads
-dates = unique(df_1$ano)
-firms = unique(df_1$cnpj8)
-df <- expand.grid(ano=dates, cnpj8=firms)
-
-df <- df %>% left_join(df_1, by=c("ano","cnpj8"), na_matches="never")
-rm(df_1)
-
-print(summary(df))
-
-#Create lag and lead npl
-df <- df %>% 
-  arrange(ano, cnpj8) %>% 
-  group_by(cnpj8) %>% 
-  mutate(lag_npl = lag(npl_180, n=1L)) %>% 
-  mutate(lead_npl = lead(npl_180)) %>% 
-  ungroup()
-
-
-#Create Additional Variables
-df <- df %>% 
-  filter(spread>0) %>% 
-  mutate(lspread = log(1+spread)) %>% 
-  mutate(uf = substr(as.character(munic_ibge),1,2)) %>% 
-  mutate(sect_state_time = paste0(sector, uf, ano))
-
+df = read_parquet('fin_fric_dataset.parquet')
+ 
 
 ##Create a list of variables
 #type of loan
@@ -75,18 +44,7 @@ vars_other <- c("maturity", "ex_currency", "npl_180","lag_npl","lead_npl","rel_d
 vars_other <- paste(vars_other,collapse="+")
 
 
-#merge with distance DF
-setwd(data_path)
-df_dist <- read_parquet("Distances_munic.parquet") %>% 
-  rename(munic_ibge = munic) %>% 
-  mutate(munic_ibge = substr(as.character(munic_ibge),1,6)) %>% select(c(1,2)) %>% 
-  mutate(munic_ibge = as.numeric(munic_ibge))
 
-df <- df %>% 
-  left_join(df_dist, by="munic_ibge", na_matches = "never")
-
-rm(df_dist)
-gc()
 
 ############################################################
 #Regressions

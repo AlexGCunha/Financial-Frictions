@@ -2,6 +2,8 @@
 #This code will work on RAIS data and unify with other dataframes
 #- But first it will bind all the year scr dfs we've done before
 #- This is equivalent to the previous "prep_rais_env", but expliciting that it is for financial frictions (ff)
+#- It also merges distinct datasets in the end, and create some additional variables
+# - it runs after prep_ff_firm and ff_simplify_inspections_data_local
 #------------------------------------------------------------------------------------------------
 
 
@@ -102,7 +104,9 @@ for (y in years){
               wagebill = sum(wage_contr),
               sector = first(ind_cnae95),
               munic_ibge = Mode(municipality)) %>% 
-    mutate(ano = as.integer(y))
+    mutate(ano = as.integer(y)) %>% 
+    mutate(sector = as.character(sector),
+           sector = substr(sector,1,2))
   
   if (aux_count==0){
     df <- df_r
@@ -177,6 +181,53 @@ df = df %>%
   left_join(df_aux, by = "cnpj8", na_matches = "never") %>% 
   mutate(inspected = ifelse(is.na(inspected),0,inspected),
          after_inspection = ifelse(inspected ==1 & year_decision >= ano,1,0))
+
+#merge with distance DF
+setwd(data_path)
+df_dist <- read_parquet("Distances_munic.parquet") %>% 
+  rename(munic_ibge = munic) %>% 
+  mutate(munic_ibge = substr(as.character(munic_ibge),1,6)) %>% select(c(1,2)) %>% 
+  mutate(munic_ibge = as.numeric(munic_ibge))
+
+############################################################
+#Additional modifications in the database
+############################################################
+df_1 <- df
+rm(df)
+
+#Create a "balanced panel". Will be important for lags and leads
+dates = unique(df_1$ano)
+firms = unique(df_1$cnpj8)
+df <- expand.grid(ano=dates, cnpj8=firms)
+
+df <- df %>% left_join(df_1, by=c("ano","cnpj8"), na_matches="never")
+rm(df_1)
+gc()
+
+print(summary(df))
+
+#Create lag and lead npl
+df <- df %>% 
+  arrange(ano, cnpj8) %>% 
+  group_by(cnpj8) %>% 
+  mutate(lag_npl = lag(npl_180, n=1L)) %>% 
+  mutate(lead_npl = lead(npl_180)) %>% 
+  ungroup()
+
+
+#Create Additional Variables
+df <- df %>% 
+  filter(spread>0) %>% 
+  mutate(lspread = log(1+spread)) %>% 
+  mutate(uf = substr(as.character(munic_ibge),1,2)) %>% 
+  mutate(sect_state_time = paste0(sector, uf, ano))
+
+
+df <- df %>% 
+  left_join(df_dist, by="munic_ibge", na_matches = "never")
+
+rm(df_dist)
+gc()
 
 
 

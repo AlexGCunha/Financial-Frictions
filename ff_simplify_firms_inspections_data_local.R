@@ -2,6 +2,7 @@
 #This code will:
 #- Work on inspections original dataset to simplify information
 #- It will generate a df with 3 columns: cnpj, date and inspections
+#- It only needs my original file to run
 #------------------------------------------------------------------------------------------------
 
 library(tidyverse)

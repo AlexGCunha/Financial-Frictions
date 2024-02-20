@@ -1,5 +1,6 @@
 #------------------------------------------------------------------------------------------------
 #This code will work on SCR data to create an anually dataframe by firm
+#- it needs prep_ff_year and prep_scr_npl
 #------------------------------------------------------------------------------------------------
 
 options(file.download.method="wininet")
