@@ -36,7 +36,8 @@ output_path = "Z:/Bernardus/Cunha_Santos_Doornik/Output_check"
 ############################################################
 #Merge previous files and select only companies to look at
 ############################################################
-years <- c('2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016')
+years <- c('2005','2006','2007','2008','2009','2010','2011','2012','2013',
+           '2014','2015','2016')
 years <- c('2005','2006','2007','2008')
 
 aux_count = 0
@@ -86,11 +87,6 @@ for (y in years){
   df_r <- read_dta(archive)
   
   df_r <- df_r %>%
-    # mutate(cnpj8 = as.character(cnpj8)) %>% 
-    # mutate_at(c("cnpj8"),~gsub(",","",.)) %>% 
-    # mutate_at(c("cnpj8"),~gsub(".","",.)) %>%
-    # mutate_at(c("cnpj8"),~gsub("-","",.)) %>%
-    # mutate_at(c("cnpj8"),~gsub("/","",.)) %>%
     mutate(cnpj8 = as.numeric(cnpj8)) %>% 
     #Filter only companies that appear in the SCR code
     filter(cnpj8%in%companies) %>%
