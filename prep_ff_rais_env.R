@@ -183,7 +183,14 @@ setwd(data_path)
 df_dist <- read_parquet("Distances_munic.parquet") %>% 
   rename(munic_ibge = munic) %>% 
   mutate(munic_ibge = substr(as.character(munic_ibge),1,6)) %>% select(c(1,2)) %>% 
-  mutate(munic_ibge = as.numeric(munic_ibge))
+  mutate(munic_ibge = as.numeric(munic_ibge)) %>% 
+  mutate(mid_dist = ifelse(dist_min >= median(dist_min, na.rm = T),1,0))
+
+df <- df %>% 
+  left_join(df_dist, by="munic_ibge", na_matches = "never")
+
+rm(df_dist)
+gc()
 
 ############################################################
 #Additional modifications in the database
@@ -217,13 +224,6 @@ df <- df %>%
   mutate(lspread = log(1+spread)) %>% 
   mutate(uf = substr(as.character(munic_ibge),1,2)) %>% 
   mutate(sect_state_time = paste0(sector, uf, ano))
-
-
-df <- df %>% 
-  left_join(df_dist, by="munic_ibge", na_matches = "never")
-
-rm(df_dist)
-gc()
 
 
 

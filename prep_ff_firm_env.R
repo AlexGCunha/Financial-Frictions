@@ -5,10 +5,11 @@
 
 options(file.download.method="wininet")
 
-if (!require("dplyr")) install.packages("splitstackshape", repos="http://artifactory.bcnet.bcb.gov.br/artifactory/cran-remote/")
-if (!require("haven")) install.packages("splitstackshape", repos="http://artifactory.bcnet.bcb.gov.br/artifactory/cran-remote/")
-if (!require("readxl")) install.packages("splitstackshape", repos="http://artifactory.bcnet.bcb.gov.br/artifactory/cran-remote/")
-if (!require("arrow")) install.packages("splitstackshape", repos="http://artifactory.bcnet.bcb.gov.br/artifactory/cran-remote/")
+repository = "http://artifactory.bcnet.bcb.gov.br/artifactory/cran-remote/"
+if (!require("dplyr")) install.packages("splitstackshape", repos=repository)
+if (!require("haven")) install.packages("splitstackshape", repos=repository)
+if (!require("readxl")) install.packages("splitstackshape", repos=repository)
+if (!require("arrow")) install.packages("splitstackshape", repos=repository)
 
 data_path = "Z:/Bernardus/Cunha_Santos_Doornik/Dta_files"
 scr_path = "Z:/DATA/Dta_files/SCR"
@@ -40,20 +41,31 @@ for (y in years){
     summarize_all(first) %>% 
     ungroup() %>% 
     #create some variables to help in the filtering process
-    mutate(non_private_1= ifelse(firm_control!=1,1,0)) %>% #non private companies by firm control
-    mutate(non_private_2 = ifelse(firm_nature <=201,1,0)) %>% #non private companies by firm nature
-    mutate(fin_ind = ifelse(firm_industry>=6400&firm_industry<=6900,1,0)) %>% #financial institutions
-    mutate(int_loans = ifelse(loan_type==1401,1,0)) %>% #Firms with interbank loans
+    #non private companies by firm control
+    mutate(non_private_1= ifelse(firm_control!=1,1,0)) %>% 
+    #non private companies by firm nature
+    mutate(non_private_2 = ifelse(firm_nature <=201,1,0)) %>% 
+    #financial institutions
+    mutate(fin_ind = ifelse(firm_industry>=6400&firm_industry<=6900,1,0)) %>%
+    #Firms with interbank loans
+    mutate(int_loans = ifelse(loan_type==1401,1,0)) %>%
     #Now we group by firms and exclude the ones with either one of the previous characteristics 
     group_by(firm_id) %>% 
     mutate(drop_firm = sum(non_private_1,non_private_2,fin_ind,int_loans)) %>% 
     ungroup() %>% 
-    filter(drop_firm==0) %>% #Exclude all firms with at least one of the previous characteristics
-    select(-c('non_private_1','non_private_2','fin_ind','int_loans')) %>%  #drop auxiliary columns
-    filter(loan_type<500|(loan_type>800&loan_type<900)|(loan_type>1300&loan_type<1400)|(loan_type>1900&loan_type<2000)) %>% #filter only loan types allowed by the BC
+    #Exclude all firms with at least one of the previous characteristics
+    filter(drop_firm==0) %>% 
+    #drop auxiliary columns
+    select(-c('non_private_1','non_private_2','fin_ind','int_loans')) %>%  
+    #filter only loan types allowed by the BC
+    filter(loan_type<500|(loan_type>800&loan_type<900)|
+             (loan_type>1300&loan_type<1400)|(loan_type>1900&loan_type<2000)
+           ) %>% 
     #Create Maturity variable
-    mutate(maturity = loan_end_date-loan_start_date) %>%  #Maturity
-    mutate(maturity = ifelse(maturity<1|maturity>12775,NaN,maturity)) #drop impossible contracts
+    #Maturity
+    mutate(maturity = loan_end_date-loan_start_date) %>%  
+    #drop impossible contracts
+    mutate(maturity = ifelse(maturity<1|maturity>12775,NaN,maturity)) 
   
   
   
@@ -65,8 +77,11 @@ for (y in years){
     mutate_at(c('time_id','time_id_y','time_id_m'),as.integer) %>% 
     mutate(time_id_q = ceiling(time_id_m/3)) %>%
     mutate(time_id_ymd = paste(time_id,30,sep='')) %>%
-    mutate(time_id_ymd = ifelse(time_id_m%in%c('01','03','05','07','08','10','12'),paste(time_id,31,sep=''),time_id_ymd)) %>%
-    mutate(time_id_ymd = ifelse(time_id_m%in%c('02'),paste(time_id,28,sep=''),time_id_ymd)) %>%
+    mutate(time_id_ymd = ifelse(time_id_m%in%c('01','03','05','07','08','10',
+                                               '12'),paste(time_id,31,sep=''),
+                                time_id_ymd)) %>%
+    mutate(time_id_ymd = ifelse(time_id_m%in%c('02'),paste(time_id,28,sep=''),
+                                time_id_ymd)) %>%
     mutate(time_id_ymd = as.Date(time_id_ymd,format='%Y%m%d')) %>% 
     #Filter rows where the relationship start date is before the firm start date
     #filter(firm_start_date<=firm_bank_start_date) %>% 
@@ -83,40 +98,53 @@ for (y in years){
   #Dummies for loan types
   ############################################################
   df<-df %>% 
-    mutate(loant_advance = ifelse(loan_type>=101&loan_type<=101,1,0)) %>% #Advance cash
-    mutate(loant_without_spurpose = ifelse(loan_type>=201&loan_type<=299,1,0)) %>% # Loan withou a specific purpose
-    mutate(loant_receiable = ifelse(loan_type>=301&loan_type<=399,1,0)) %>% # Discounted receivables
-    mutate(loant_with_spurpose = ifelse(loan_type>=400&loan_type<=499,1,0)) %>% # With Specific purpose
-    mutate(loant_rural = ifelse(loan_type>=800&loan_type<=899,1,0)) %>% # Rural loans
-    mutate(loant_other = ifelse(loan_type>=1300&loan_type<=1399,1,0)) %>% # Other types of loans
-    mutate(loant_limit = ifelse(loan_type>=1900&loan_type<=1999,1,0)) %>% # Some limits (cheque especial, credit card, aquisition of goods...)
-    mutate(loant_exports = ifelse(loan_type>=501&loan_type<=599,1,0)) %>% #
-    mutate(loant_imports = ifelse(loan_type>=601&loan_type<=699,1,0)) %>% #
-    mutate(loant_intervention = ifelse(loan_type>=701&loan_type<=799,1,0)) %>% #
-    mutate(loant_imob = ifelse(loan_type>=901&loan_type<=999,1,0)) %>% #
-    mutate(loant_tvm = ifelse(loan_type>=1001&loan_type<=1099,1,0)) %>% #
-    mutate(loant_infra = ifelse(loan_type>=1101&loan_type<=1199,1,0)) %>% #
-    mutate(loant_leasing = ifelse(loan_type>=1201&loan_type<=1299,1,0)) %>% #
-    mutate(loant_intfin = ifelse(loan_type>=1401&loan_type<=1499,1,0)) %>% #
-    mutate(loant_coobligations = ifelse(loan_type>=1501&loan_type<=1599,1,0)) %>% #
-    mutate(loant_credits_released = ifelse(loan_type>=1601&loan_type<=1699,1,0)) %>% #
-    mutate(loant_linked = ifelse(loan_type>=1701&loan_type<=1799,1,0)) %>% #
-    mutate(loant_linked2 = ifelse(loan_type>=1801&loan_type<=1899,1,0)) %>% #
-    mutate(loant_riskretention = ifelse(loan_type>=2001&loan_type<=2099,1,0)) #
+    #Advance cash
+    mutate(loant_advance = ifelse(loan_type>=101&loan_type<=101,1,0)) %>%
+    # Loan withou a specific purpose
+    mutate(loant_without_spurpose = ifelse(loan_type>=201&loan_type<=299,1,0)
+           ) %>% 
+    # Discounted receivables
+    mutate(loant_receiable = ifelse(loan_type>=301&loan_type<=399,1,0)) %>%
+    # With Specific purpose
+    mutate(loant_with_spurpose = ifelse(loan_type>=400&loan_type<=499,1,0)) %>% 
+    # Rural loans
+    mutate(loant_rural = ifelse(loan_type>=800&loan_type<=899,1,0)) %>%
+    # Other types of loans
+    mutate(loant_other = ifelse(loan_type>=1300&loan_type<=1399,1,0)) %>% 
+    # Some limits (cheque especial, credit card, aquisition of goods...)
+    mutate(loant_limit = ifelse(loan_type>=1900&loan_type<=1999,1,0)) %>% 
+    mutate(loant_exports = ifelse(loan_type>=501&loan_type<=599,1,0)) %>% 
+    mutate(loant_imports = ifelse(loan_type>=601&loan_type<=699,1,0)) %>% 
+    mutate(loant_intervention = ifelse(loan_type>=701&loan_type<=799,1,0)) %>% 
+    mutate(loant_imob = ifelse(loan_type>=901&loan_type<=999,1,0)) %>% 
+    mutate(loant_tvm = ifelse(loan_type>=1001&loan_type<=1099,1,0)) %>% 
+    mutate(loant_infra = ifelse(loan_type>=1101&loan_type<=1199,1,0)) %>%
+    mutate(loant_leasing = ifelse(loan_type>=1201&loan_type<=1299,1,0)) %>% 
+    mutate(loant_intfin = ifelse(loan_type>=1401&loan_type<=1499,1,0)) %>% 
+    mutate(loant_coobligations = ifelse(loan_type>=1501&loan_type<=1599,
+                                        1,0)) %>% 
+    mutate(loant_credits_released = ifelse(loan_type>=1601&loan_type<=1699,
+                                           1,0)) %>% #
+    mutate(loant_linked = ifelse(loan_type>=1701&loan_type<=1799,1,0)) %>% 
+    mutate(loant_linked2 = ifelse(loan_type>=1801&loan_type<=1899,1,0)) %>% 
+    mutate(loant_riskretention = ifelse(loan_type>=2001&loan_type<=2099,1,0)) 
   
   
   
   #Dummies for loan resorces
   ############################################################
   df<-df %>% 
-    mutate(loanr_private = ifelse(loan_resource<200,1,0)) %>% #dummy for loans with private resources
-    mutate(loanr_bndes = ifelse(loan_resource==202,1,0)) %>% # BNDES
+    #dummy for loans with private resources
+    mutate(loanr_private = ifelse(loan_resource<200,1,0)) %>% 
+    # BNDES
+    mutate(loanr_bndes = ifelse(loan_resource==202,1,0)) %>% 
     mutate(loanr_regional = ifelse(loan_resource>=204&loan_resource<=207,1,0)) %>% # Dummy for fco, fne, fno and other state funds
     mutate(loanr_other = ifelse(loan_resource==201|loan_resource==203|(loan_resource>=208&loan_resource<300),1,0)) %>% #dummy for other
     #Dummy for collateral
-    mutate(collateral= ifelse(collateral_type >0,1,0)) %>%  #dummy for any kind of collateral
+    #dummy for any kind of collateral
+    mutate(collateral= ifelse(collateral_type >0,1,0)) %>%  
     #Dummy for external currency
-    mutate(ex_currency = ifelse(loan_currency !=-2,1,0)) %>%  #dummy for loans in external currency
+    mutate(ex_currency = ifelse(loan_currency !=-2,1,0)) %>%
     #Number of banks
     group_by(firm_id) %>% 
     mutate(n_banks = length(unique(bank_id))) %>% 
@@ -191,8 +219,10 @@ for (y in years){
   #Type of resource
   vars_loanr <- colnames(df[,grepl("loanr",names(df))])
   #Other
-  vars_other <- c('loan_outstanding', 'ex_currency', 'n_banks','rel_duration','maturity','rel_duration',
-                  'npl_90','npl_180','npl_over_180','spread','loan_base_rate','rating')
+  vars_other <- c('loan_outstanding', 'ex_currency', 'n_banks',
+                  'rel_duration','maturity','rel_duration',
+                  'npl_90','npl_180','npl_over_180','spread',
+                  'loan_base_rate','rating')
   #total
   vars_total <- c(vars_other, vars_loanr,vars_loant)
   
