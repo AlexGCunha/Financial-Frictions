@@ -27,7 +27,7 @@ codes_path = "Z:/Bernardus/Cunha_Santos_Doornik/Codes"
 rais_path = "Z:/DATA/Dta_files/RAIS"
 
 date = Sys.Date()
-date = str_replace_all(date,"-","_")
+date = str_replace_all(date,"-","")
 
 
 #This code will work on SCR data to create an anual dataframe
