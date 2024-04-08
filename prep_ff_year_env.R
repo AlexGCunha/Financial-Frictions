@@ -79,7 +79,7 @@ ff_year <-function(){
                                     loan_start_date,loan_end_date, firm_start_date,
                                     firm_bank_start_date, loan_currency,
                                     firm_nature, firm_control,firm_industry, 
-                                    collateral_type, revenues)
+                                    collateral_type)
       )
       
       #select only the contracts that started in the given year:
