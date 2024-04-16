@@ -17,14 +17,14 @@ ff_descriptive <- function(){
   if (!require("ggplot2")) install.packages("splitstackshape", repos=repository)
   if (!require("readr")) install.packages("splitstackshape", repos=repository)
   if (!require("purrr")) install.packages("splitstackshape", repos=repository)
-  if (!require("MatchIt")) install.packages("splitstackshape", repos=repository)
+  #if (!require("MatchIt")) install.packages("splitstackshape", repos=repository)
   
-  
+
   library(tidyverse)
   library(haven)
   library(readxl) 
   library(arrow)
-  library(MatchIt)
+  
   
   data_path = "Z:/Bernardus/Cunha_Santos_Doornik/Dta_files"
   rais_path = "Z:/DATA/Dta_files/RAIS"

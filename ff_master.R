@@ -28,33 +28,37 @@ rais_path = "Z:/DATA/Dta_files/RAIS"
 
 date = "20240402"
 
-setwd(codes_path)
-#This code will work on SCR data to create an anual dataframe
+# #This code will work on SCR data to create an anual dataframe
 #Generates samples and filters only selected variables
-flname = paste0("prep_ff_year_env_20240408.R")
-source(flname)
-ff_year()
+# setwd(codes_path)
+# flname = paste0("prep_ff_year_env_20240408.R")
+# source(flname)
+# ff_year()
 
-
-#This code will work on SCR data to create an anually dataframe by firm
-flname = paste0("prep_ff_firm_env_20240402.R")
-source(flname)
-ff_firm()
-
-
-#This code will work on RAIS data and unify with other dataframes
-flname = paste0("prep_ff_rais_env_20240402.R")
-source(flname)
-ff_rais()
+#
+# #This code will work on SCR data to create an anually dataframe by firm
+# setwd(codes_path)
+# flname = paste0("prep_ff_firm_env_20240402.R")
+# source(flname)
+# ff_firm()
+#
+#
+# #This code will work on RAIS data and unify with other dataframes
+# setwd(codes_path)
+# flname = paste0("prep_ff_rais_env_20240402.R")
+# source(flname)
+# ff_rais()
 
 
 #This code will  run some descriptive analysis
-flname = paste0("ff_descriptive_analysis_20240402.R")
+setwd(codes_path)
+flname = paste0("ff_descriptive_analysis_20240416.R")
 source(flname)
 ff_descriptive()
 
 
 #This code will  run the regressions
+setwd(codes_path)
 flname = paste0("ff_regs_env_",date,".R")
 source(flname)
 ff_regs()
