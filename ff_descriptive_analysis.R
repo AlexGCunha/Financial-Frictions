@@ -43,7 +43,7 @@ ff_descriptive <- function(){
   
   #Spread Histograms
   p1 = ggplot(df, aes(spread))+
-    geom_histogram()+
+    geom_density()+
     facet_wrap(~ano)+theme_minimal()+
     labs(y = "", x = "Spread")
   
@@ -80,10 +80,9 @@ ff_descriptive <- function(){
   ##############
   #Spreads by year and firm size
   ##############
-  #Create a column with indicators for quantile of firm employees
-  quantiles = quantile(df$comp_employees, probs = c(0.25, 0.5, 0.75,1))
+  #Create a column with indicators for numbers of employees
   df = df %>% 
-    mutate(quant_size = cut(comp_employees, quantiles),
+    mutate(quant_size = cut(comp_employees, c(0,10,50,100,1000)),
            quant_size = as.character(quant_size))
   
   #fake values for testing, delete
