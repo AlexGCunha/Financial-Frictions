@@ -85,6 +85,8 @@ ff_descriptive <- function(){
     mutate(quant_size = cut(comp_employees, c(0,10,50,100,1000)),
            quant_size = as.character(quant_size))
   
+  sizes = c("0-10","11-50","51-100","101-1000")
+  
   #fake values for testing, delete
   # df = df %>% mutate(quant_size = sample(c(1:4), nrow(df), replace = T)) %>% 
   #   mutate(quant_size = as.character(quant_size))
@@ -103,7 +105,7 @@ ff_descriptive <- function(){
     theme_minimal()+
     labs(title = "Avg Spreads by year and firm size quartile",
          color = "N of employees")+
-    scale_color_discrete(labels = as.character(quantiles))
+    scale_color_discrete(labels = as.character(sizes))
   
   filename = paste0("time_series_spreads_size_", date,".png")
   ggsave(filename, plot = p4)
@@ -115,7 +117,7 @@ ff_descriptive <- function(){
     theme_minimal()+
     labs(title = "SD Spreads by year and firm size quartile",
          color = "N of employees")+
-    scale_color_discrete(labels = as.character(quantiles))
+    scale_color_discrete(labels = as.character(sizes))
   
   filename = paste0("time_series_sd_spreads_size_", date, ".png")
   ggsave(filename, plot = p5)
